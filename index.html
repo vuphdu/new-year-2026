@@ -52,12 +52,26 @@
         inset: 0;
         background: linear-gradient(
           180deg,
-          rgba(10, 0, 21, 0.25) 0%,
-          rgba(10, 0, 21, 0.55) 50%,
-          rgba(10, 0, 21, 0.8) 100%
+          rgba(10, 0, 21, 0.15) 0%,
+          rgba(10, 0, 21, 0.35) 50%,
+          rgba(10, 0, 21, 0.65) 100%
         );
         z-index: 1;
         pointer-events: none;
+      }
+
+      /* ─── Screen flash on explosion ─── */
+      .screen-flash {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.05s ease-out;
+      }
+      .screen-flash.active {
+        opacity: 1;
+        transition: opacity 0.05s ease-out;
       }
 
       /* ─── Main Content ─── */
@@ -557,7 +571,7 @@
 
       // ── Particle class ──
       class Particle {
-        constructor(x, y, color, angle, speed, life, size) {
+        constructor(x, y, color, angle, speed, life, size, isWillow = false) {
           this.x = x;
           this.y = y;
           this.color = color;
@@ -566,25 +580,28 @@
           this.life = life;
           this.maxLife = life;
           this.size = size;
-          this.decay = rand(0.015, 0.03);
-          this.gravity = 0.02;
+          this.isWillow = isWillow;
+          this.decay = isWillow ? rand(0.005, 0.012) : rand(0.012, 0.025);
+          this.gravity = isWillow ? 0.06 : 0.025;
           this.vx = Math.cos(angle) * speed;
           this.vy = Math.sin(angle) * speed;
           this.alpha = 1;
           this.trail = [];
+          this.maxTrail = isWillow ? 18 : 10;
+          this.friction = isWillow ? 0.96 : 0.975;
         }
 
         update() {
-          this.trail.push({ x: this.x, y: this.y, alpha: this.alpha * 0.5 });
-          if (this.trail.length > 6) this.trail.shift();
+          this.trail.push({ x: this.x, y: this.y, alpha: this.alpha * 0.6 });
+          if (this.trail.length > this.maxTrail) this.trail.shift();
 
-          this.vx *= 0.98;
-          this.vy *= 0.98;
+          this.vx *= this.friction;
+          this.vy *= this.friction;
           this.vy += this.gravity;
           this.x += this.vx;
           this.y += this.vy;
           this.alpha -= this.decay;
-          this.size *= 0.995;
+          this.size *= 0.993;
         }
 
         draw() {
@@ -593,9 +610,9 @@
             const t = this.trail[i];
             const ratio = i / this.trail.length;
             ctx.beginPath();
-            ctx.arc(t.x, t.y, this.size * ratio * 0.5, 0, TAU);
+            ctx.arc(t.x, t.y, this.size * ratio * 0.6, 0, TAU);
             ctx.fillStyle = this.color;
-            ctx.globalAlpha = t.alpha * ratio * 0.3;
+            ctx.globalAlpha = t.alpha * ratio * 0.4;
             ctx.fill();
           }
 
@@ -606,22 +623,21 @@
           ctx.globalAlpha = this.alpha;
           ctx.fill();
 
-          // Glow
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, this.size * 2.5, 0, TAU);
-          const g = ctx.createRadialGradient(
-            this.x,
-            this.y,
-            0,
-            this.x,
-            this.y,
-            this.size * 2.5,
-          );
-          g.addColorStop(0, this.color);
-          g.addColorStop(1, "transparent");
-          ctx.fillStyle = g;
-          ctx.globalAlpha = this.alpha * 0.3;
-          ctx.fill();
+          // Glow – only draw when particle is bright enough (perf optimization)
+          if (this.alpha > 0.3 && this.size > 1) {
+            ctx.beginPath();
+            const glowSize = this.size * 4;
+            ctx.arc(this.x, this.y, glowSize, 0, TAU);
+            const g = ctx.createRadialGradient(
+              this.x, this.y, 0,
+              this.x, this.y, glowSize
+            );
+            g.addColorStop(0, this.color);
+            g.addColorStop(1, "transparent");
+            ctx.fillStyle = g;
+            ctx.globalAlpha = this.alpha * 0.4;
+            ctx.fill();
+          }
 
           ctx.globalAlpha = 1;
         }
@@ -630,24 +646,34 @@
       // ── Rocket class ──
       class Rocket {
         constructor() {
-          this.x = rand(W * 0.15, W * 0.85);
+          this.x = rand(W * 0.1, W * 0.9);
           this.y = H;
-          this.targetY = rand(H * 0.1, H * 0.4);
-          this.speed = rand(3, 5);
+          this.targetY = rand(H * 0.08, H * 0.38);
+          this.speed = rand(4, 7);
           this.vy = -this.speed;
           this.color = "#FFD700";
           this.trail = [];
           this.exploded = false;
-          this.size = 2.5;
+          this.size = 3;
+          this.sparkTimer = 0;
         }
 
         update() {
           this.trail.push({ x: this.x, y: this.y });
-          if (this.trail.length > 12) this.trail.shift();
+          if (this.trail.length > 16) this.trail.shift();
 
           this.y += this.vy;
           this.vy *= 0.99;
-          this.x += rand(-0.3, 0.3);
+          this.x += rand(-0.5, 0.5);
+
+          // Emit sparks while ascending
+          this.sparkTimer++;
+          if (this.sparkTimer % 3 === 0) {
+            particles.push(new Particle(
+              this.x, this.y, '#FFD700',
+              rand(0, TAU), rand(0.2, 0.8), rand(0.3, 0.5), rand(0.5, 1.2)
+            ));
+          }
 
           if (this.y <= this.targetY) {
             this.exploded = true;
@@ -660,90 +686,161 @@
             const t = this.trail[i];
             const ratio = i / this.trail.length;
             ctx.beginPath();
-            ctx.arc(t.x, t.y, this.size * ratio * 0.5, 0, TAU);
+            ctx.arc(t.x, t.y, this.size * ratio * 0.6, 0, TAU);
             ctx.fillStyle = this.color;
-            ctx.globalAlpha = ratio * 0.3;
+            ctx.globalAlpha = ratio * 0.4;
             ctx.fill();
           }
 
-          // Head
+          // Head with brighter glow
           ctx.beginPath();
           ctx.arc(this.x, this.y, this.size, 0, TAU);
           ctx.fillStyle = "#fff";
           ctx.globalAlpha = 1;
           ctx.fill();
+
+          // Head glow
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size * 4, 0, TAU);
+          const hg = ctx.createRadialGradient(
+            this.x, this.y, 0,
+            this.x, this.y, this.size * 4
+          );
+          hg.addColorStop(0, 'rgba(255,255,255,0.6)');
+          hg.addColorStop(1, 'transparent');
+          ctx.fillStyle = hg;
+          ctx.globalAlpha = 0.5;
+          ctx.fill();
+          ctx.globalAlpha = 1;
         }
       }
 
       let particles = [];
       let rockets = [];
       let lastRocket = 0;
-      const rocketInterval = 800; // ms between rockets
+      const rocketInterval = 500; // ms between rockets – faster launches
+      const MAX_PARTICLES = 2000; // cap to prevent lag
 
-      function explode(x, y) {
+      // ── Screen flash element ──
+      const flashEl = document.createElement('div');
+      flashEl.className = 'screen-flash';
+      document.body.appendChild(flashEl);
+
+      function screenFlash(color) {
+        flashEl.style.background = `radial-gradient(circle, ${color}33 0%, transparent 70%)`;
+        flashEl.classList.add('active');
+        setTimeout(() => flashEl.classList.remove('active'), 100);
+      }
+
+      function explode(x, y, isSecondary = false) {
+        // Skip if we already have too many particles
+        if (particles.length >= MAX_PARTICLES) return;
+
         const palette = palettes[Math.floor(rand(0, palettes.length))];
-        const count = Math.floor(rand(60, 100));
-        const type = Math.floor(rand(0, 3)); // 0 = sphere, 1 = ring, 2 = star
+        const budget = MAX_PARTICLES - particles.length;
+        const desired = isSecondary ? Math.floor(rand(30, 50)) : Math.floor(rand(120, 200));
+        const count = Math.min(desired, budget);
+        // 0 = sphere, 1 = ring, 2 = star, 3 = chrysanthemum, 4 = willow
+        const type = Math.floor(rand(0, 5));
+
+        // Screen flash for primary explosions
+        if (!isSecondary) {
+          screenFlash(palette[0]);
+        }
 
         for (let i = 0; i < count; i++) {
-          let angle, speed;
+          let angle, speed, isWillow = false;
 
           if (type === 0) {
-            // Sphere burst
+            // Sphere burst – big and powerful
             angle = rand(0, TAU);
-            speed = rand(1, 5);
+            speed = rand(2, 8);
           } else if (type === 1) {
-            // Ring
+            // Ring – perfect circle
             angle = (i / count) * TAU;
-            speed = rand(3, 4.5);
-          } else {
-            // Double burst
+            speed = rand(4, 7);
+          } else if (type === 2) {
+            // Star burst – inner & outer layers
             angle = rand(0, TAU);
-            speed = rand(0.5, 2.5) + (i % 2 === 0 ? 2.5 : 0);
+            speed = rand(1, 3.5) + (i % 3 === 0 ? 4 : 0);
+          } else if (type === 3) {
+            // Chrysanthemum – dense and streaky
+            angle = rand(0, TAU);
+            speed = rand(1.5, 6.5);
+          } else {
+            // Willow – drooping trails
+            angle = rand(0, TAU);
+            speed = rand(2, 5.5);
+            isWillow = true;
           }
 
           const color = palette[Math.floor(rand(0, palette.length))];
           const life = rand(0.8, 1);
-          const size = rand(1.5, 3);
-          particles.push(new Particle(x, y, color, angle, speed, life, size));
+          const size = isSecondary ? rand(1.5, 2.5) : rand(2, 4.5);
+          particles.push(new Particle(x, y, color, angle, speed, life, size, isWillow));
+        }
+
+        // Chance for secondary cascading explosions (only if under budget)
+        if (!isSecondary && Math.random() > 0.5 && particles.length < MAX_PARTICLES * 0.7) {
+          const numSec = Math.floor(rand(2, 4));
+          for (let s = 0; s < numSec; s++) {
+            const delay = rand(200, 600);
+            const sx = x + rand(-80, 80);
+            const sy = y + rand(-80, 80);
+            setTimeout(() => explode(sx, sy, true), delay);
+          }
+        }
+
+        // Center flash burst – bright core
+        if (!isSecondary) {
+          ctx.beginPath();
+          ctx.arc(x, y, 30, 0, TAU);
+          const cg = ctx.createRadialGradient(x, y, 0, x, y, 30);
+          cg.addColorStop(0, 'rgba(255,255,255,0.9)');
+          cg.addColorStop(1, 'transparent');
+          ctx.fillStyle = cg;
+          ctx.globalAlpha = 0.8;
+          ctx.fill();
+          ctx.globalAlpha = 1;
         }
       }
 
       function animate(time) {
         requestAnimationFrame(animate);
 
-        // Fade effect
-        ctx.fillStyle = "rgba(10, 0, 21, 0.15)";
+        // Fade effect – slightly slower fade for longer trails
+        ctx.fillStyle = "rgba(10, 0, 21, 0.12)";
         ctx.fillRect(0, 0, W, H);
 
-        // Launch rockets
-        if (time - lastRocket > rocketInterval) {
-          rockets.push(new Rocket());
-          // Occasionally launch doubles
-          if (Math.random() > 0.6) {
-            setTimeout(() => rockets.push(new Rocket()), 200);
+        // Launch rockets – throttle when particle count is high
+        if (time - lastRocket > rocketInterval && particles.length < MAX_PARTICLES * 0.8) {
+          const burstCount = Math.random() > 0.4 ? Math.floor(rand(2, 4)) : 1;
+          for (let b = 0; b < burstCount; b++) {
+            setTimeout(() => rockets.push(new Rocket()), b * 150);
           }
           lastRocket = time;
         }
 
-        // Update & draw rockets
+        // Update & draw rockets (swap-and-pop for O(1) removal)
         for (let i = rockets.length - 1; i >= 0; i--) {
           const r = rockets[i];
           r.update();
           r.draw();
           if (r.exploded) {
             explode(r.x, r.y);
-            rockets.splice(i, 1);
+            rockets[i] = rockets[rockets.length - 1];
+            rockets.pop();
           }
         }
 
-        // Update & draw particles
+        // Update & draw particles (swap-and-pop for O(1) removal)
         for (let i = particles.length - 1; i >= 0; i--) {
           const p = particles[i];
           p.update();
           p.draw();
           if (p.alpha <= 0) {
-            particles.splice(i, 1);
+            particles[i] = particles[particles.length - 1];
+            particles.pop();
           }
         }
       }
