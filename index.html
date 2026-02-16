@@ -203,6 +203,57 @@
         font-weight: 500;
       }
 
+      /* ─── Photo thumbnails ─── */
+      .photo-row {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+      }
+
+      .photo-thumb {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid rgba(255, 215, 0, 0.5);
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .photo-thumb:active {
+        transform: scale(1.1);
+        box-shadow: 0 0 25px rgba(255, 215, 0, 0.5);
+      }
+
+      .photo-thumb.large {
+        width: 100px;
+        height: 100px;
+      }
+
+      .photo-group {
+        width: 100%;
+        max-width: 320px;
+        border-radius: 12px;
+        object-fit: cover;
+        border: 2px solid rgba(255, 215, 0, 0.3);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        margin-bottom: 10px;
+      }
+
+      .intro .photo-row {
+        margin-top: 16px;
+        margin-bottom: 0;
+      }
+
+      .intro .photo-thumb {
+        width: 100px;
+        height: 100px;
+        border-color: rgba(255, 159, 67, 0.6);
+        box-shadow: 0 0 20px rgba(255, 159, 67, 0.3);
+      }
+
       /* ─── Footer ─── */
       .footer {
         margin-top: 32px;
@@ -393,7 +444,13 @@
       <div class="divider"></div>
 
       <!-- Intro -->
-      <div class="intro">🧒🧒 2 cu Trũi<br />gửi lời chúc tới cả nhà 🏠</div>
+      <div class="intro">
+        🧒🧒 2 cu Trũi<br />gửi lời chúc tới cả nhà 🏠
+        <div class="photo-row">
+          <img src="pic/b%C3%A1ch.jpg" alt="Bách" class="photo-thumb" />
+          <img src="pic/phong.jpg" alt="Phong" class="photo-thumb" />
+        </div>
+      </div>
 
       <!-- General wish -->
       <div class="greeting-card" style="animation-delay: 0.5s">
@@ -408,7 +465,10 @@
       <!-- Greeting Cards -->
       <div class="greetings">
         <div class="greeting-card">
-          <span class="emoji">👴👵</span>
+          <div class="photo-row">
+            <img src="pic/%C3%B4ng%20ngo%E1%BA%A1i.jpg" alt="Ông Ngoại" class="photo-thumb large" />
+            <img src="pic/b%C3%A0%20ngo%E1%BA%A1i.jpg" alt="Bà Ngoại" class="photo-thumb large" />
+          </div>
           <div class="to">Ông Bà Ngoại</div>
           <div class="message">
             Chúc ông bà ngoại thật nhiều <strong>sức khoẻ</strong> để vui vầy
@@ -435,7 +495,7 @@
         </div>
 
         <div class="greeting-card">
-          <span class="emoji">👦👧📚</span>
+          <img src="pic/anh-em.jpg" alt="Các anh chị em" class="photo-group" />
           <div class="to">Anh chị Ngọc, Sơn, Khôi, Chi</div>
           <div class="message">
             Chúc các anh chị Ngọc, Sơn, Khôi, Chi <strong>học giỏi</strong>,
