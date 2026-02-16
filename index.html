@@ -233,13 +233,19 @@
       }
 
       .photo-group {
-        width: 100%;
-        max-width: 320px;
-        border-radius: 12px;
+        display: block;
+        width: calc(100% + 40px);
+        margin-left: -20px;
+        margin-right: -20px;
+        margin-bottom: 14px;
+        border-radius: 0;
         object-fit: cover;
-        border: 2px solid rgba(255, 215, 0, 0.3);
+        object-position: top;
+        border: none;
+        border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+        border-top: 2px solid rgba(255, 215, 0, 0.3);
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        margin-bottom: 10px;
+        max-height: 280px;
       }
 
       .intro .photo-row {
@@ -504,7 +510,7 @@
         </div>
 
         <div class="greeting-card">
-          <span class="emoji">👨‍👩‍👧‍👦💕</span>
+          <img src="pic/vanvu.jpg" alt="Bố Mẹ Vân Vũ" class="photo-group" />
           <div class="to">Bố Mẹ Vân Vũ</div>
           <div class="message">
             Chúc bố mẹ Vân Vũ được <strong>hơn năm cũ</strong> :D 🎉🍀
