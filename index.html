@@ -474,11 +474,10 @@
 
       <!-- General wish -->
       <div class="greeting-card" style="animation-delay: 0.5s">
-        <span class="emoji">🌟</span>
-        <div class="to">Gửi cả nhà</div>
+        <span class="emoji">🌸</span>
+        <div class="to">Gửi Cả Gia Đình Thân Yêu</div>
         <div class="message">
-          Chúc cả nhà một năm nhiều <strong>sức khoẻ</strong> là điều quan trọng
-          nhất! 💪
+          Năm mới đến, mong nhà mình luôn đong đầy <strong>tiếng cười</strong>, trọn vẹn <strong>yêu thương</strong> và quan trọng nhất là ai cũng thật <strong>dồi dào sức khỏe</strong>. Chúc mọi người một năm Ất Tỵ vạn sự như ý, tỷ sự như mơ! 🧧✨
         </div>
       </div>
 
@@ -489,37 +488,33 @@
             <img src="pic/%C3%B4ng%20ngo%E1%BA%A1i.jpg" alt="Ông Ngoại" class="photo-thumb large" />
             <img src="pic/b%C3%A0%20ngo%E1%BA%A1i.jpg" alt="Bà Ngoại" class="photo-thumb large" />
           </div>
-          <div class="to">Ông Bà Ngoại</div>
+          <div class="to">Kính Chúc Ông Bà Ngoại</div>
           <div class="message">
-            Chúc ông bà ngoại thật nhiều <strong>sức khoẻ</strong> để vui vầy
-            bên con cháu. ❤️
+            Hai cháu Trũi kính chúc ông bà luôn <strong>mạnh khỏe</strong>, sống lâu trăm tuổi để mỗi ngày đều thấy con cháu khôn lớn, trưởng thành. Ông bà chính là <strong>chỗ dựa tinh thần</strong> ấm áp nhất của cả nhà mình! ❤️👵👴
           </div>
         </div>
 
         <div class="greeting-card">
-          <span class="emoji">👨👨</span>
+          <span class="emoji">💼✨</span>
           <div class="to">Bác Trọng &amp; Bác Thuận</div>
           <div class="message">
-            Chúc bác Trọng, bác Thuận <strong>may mắn nhiều tiền</strong>, ngày
-            càng đẹp zai 💰😎
+            Chúc hai bác một năm mới <strong>công việc hanh thông</strong>, tiền vào như nước, tiền ra nhỏ giọt. Đặc biệt là ngày càng <strong>phong độ</strong>, trẻ trung và sớm tìm được một nửa yêu thương nhé! 💰🔥😎
           </div>
         </div>
 
         <div class="greeting-card">
-          <span class="emoji">👩👩</span>
-          <div class="to">Bá Thuý &amp; Bá Hiền</div>
+          <span class="emoji">🌹👸</span>
+          <div class="to">Bá Thúy &amp; Bá Hiền</div>
           <div class="message">
-            Chúc bá Thuý, bá Hiền luôn <strong>vui vẻ</strong> và
-            <strong>xinh đẹp</strong>. 🌸✨
+            Chúc hai bá luôn giữ vững phong độ <strong>xinh đẹp</strong>, trẻ mãi không già. Mong nụ cười luôn nở trên môi, cuộc sống ngập tràn <strong>niềm vui</strong> và hạnh phúc bên gia đình! 🌸💖✨
           </div>
         </div>
 
         <div class="greeting-card">
           <img src="pic/anh-em.jpg" alt="Các anh chị em" class="photo-group" />
-          <div class="to">Anh chị Ngọc, Sơn, Khôi, Chi</div>
+          <div class="to">Các Anh Chị: Ngọc, Sơn, Khôi, Chi</div>
           <div class="message">
-            Chúc các anh chị Ngọc, Sơn, Khôi, Chi <strong>học giỏi</strong>,
-            thông minh, cao lớn ^^ 🎓🚀
+            Chúc các anh chị bước sang năm mới <strong>học tập xuất sắc</strong>, đạt nhiều điểm 10 chói lọi. Mong các anh chị ngày càng <strong>thông minh</strong>, cao lớn và luôn là tấm gương sáng cho hai em Trũi noi theo nhé! 🎓💡🚀
           </div>
         </div>
 
@@ -527,7 +522,7 @@
           <img src="pic/vanvu.jpg" alt="Bố Mẹ Vân Vũ" class="photo-group" />
           <div class="to">Bố Mẹ Vân Vũ</div>
           <div class="message">
-            Chúc bố mẹ Vân Vũ được <strong>hơn năm cũ</strong> :D 🎉🍀
+            Chúc bố mẹ yêu quý một năm mới <strong>hạnh phúc viên mãn</strong>, công việc suôn sẻ và gặt hái được nhiều <strong>thành công</strong> rực rỡ hơn cả năm cũ. Bố mẹ cứ yên tâm, hai cu Trũi sẽ thật ngoan ạ! 🥰🍀🎉
           </div>
         </div>
       </div>
@@ -675,7 +670,7 @@
             ));
           }
 
-          if (this.y <= this.targetY) {
+          if (this.y <= this.targetY || (this.vy > -0.5 && this.y < H * 0.9)) {
             this.exploded = true;
           }
         }
@@ -819,6 +814,13 @@
             setTimeout(() => rockets.push(new Rocket()), b * 150);
           }
           lastRocket = time;
+
+          // Occasionally trigger a spontaneous auto-explosion without a rocket
+          if (Math.random() > 0.7) {
+            setTimeout(() => {
+                explode(rand(W * 0.2, W * 0.8), rand(H * 0.1, H * 0.5));
+            }, rand(0, 1000));
+          }
         }
 
         // Update & draw rockets (swap-and-pop for O(1) removal)
